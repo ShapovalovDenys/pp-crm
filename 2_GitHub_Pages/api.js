@@ -3,7 +3,7 @@
 // ============================================================
 
 // 1. Вставте сюди ваш URL веб-додатку Google Apps Script (закінчується на /exec):
-var GAS_API_URL = "https://script.google.com/macros/s/ТВОЙ_URL_APPS_SCRIPT/exec";
+var GAS_API_URL = "https://script.google.com/macros/s/AKfycbxlvh4gpkHpushItka1N0YcHY4QFaJAlLr9O0cwPMjP05uE2IMrQGb_9N4IMbe0W1sR/exec";
 
 // 2. Беремо ключ доступу із URL (?key=...), а якщо відкрито як окремий додаток — із пам'яті пристрою
 var _params = new URLSearchParams(window.location.search);
