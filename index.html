@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="uk" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Print&Power Team CRM</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="api.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root[data-theme="dark"] {
+    --bg: #0b0e14;
+    --surface: #121620;
+    --surface-2: #171c28;
+    --surface-3: #1e2433;
+    --border: #232a3b;
+    --text: #f3f4f6;
+    --text-muted: #8b95a5;
+    --text-dim: #5c6678;
+    --amber: #f59e0b;
+    --amber-bg: rgba(245, 158, 11, 0.14);
+    --amber-border: rgba(245, 158, 11, 0.35);
+    --green: #10b981;
+    --green-bg: rgba(16, 185, 129, 0.12);
+    --green-border: rgba(16, 185, 129, 0.3);
+    --blue: #3b82f6;
+    --purple: #a855f7;
+    --red: #ef4444;
+    --red-bg: rgba(239, 68, 68, 0.14);
+    --red-border: rgba(239, 68, 68, 0.35);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  :root[data-theme="light"] {
+    --bg: #f3f5f9;
+    --surface: #ffffff;
+    --surface-2: #f8fafc;
+    --surface-3: #eef2f6;
+    --border: #dfe5ef;
+    --text: #111827;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --amber: #d97706;
+    --amber-bg: rgba(245, 158, 11, 0.15);
+    --amber-border: rgba(245, 158, 11, 0.4);
+    --green: #059669;
+    --green-bg: rgba(16, 185, 129, 0.1);
+    --green-border: rgba(16, 185, 129, 0.3);
+    --blue: #2563eb;
+    --purple: #7c3aed;
+    --red: #dc2626;
+    --red-bg: rgba(239, 68, 68, 0.1);
+    --red-border: rgba(239, 68, 68, 0.3);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13.5px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 60px;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; border: none; background: none; }
+
+  .container { max-width: 1520px; margin: 0 auto; padding: 0 20px; }
+
+  /* ── 1. Верхній Header ── */
+  .header-top { border-bottom: 1px solid var(--border); background: var(--bg); padding: 12px 0; }
+  .header-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    display: flex; align-items: center; justify-content: center;
+    color: #0b0e14; font-weight: 800; font-size: 18px;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+  }
+  .brand-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .brand-name { font-weight: 800; font-size: 17px; letter-spacing: -0.02em; }
+  .sheet-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--green-bg); border: 1px solid var(--green-border);
+    color: var(--green); font-size: 11.5px; font-weight: 600;
+    padding: 2px 9px; border-radius: 99px;
+  }
+  .sheet-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .brand-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+  .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .role-switcher {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 10px; font-size: 12.5px;
+  }
+  .role-switcher span { color: var(--amber); font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+  .role-switcher select { background: transparent; border: none; font-weight: 700; color: var(--text); cursor: pointer; padding-right: 4px; }
+  .role-switcher select option { background: var(--surface); color: var(--text); }
+
+  .icon-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 7px 12px; border-radius: 10px; font-size: 12.5px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 6px; transition: 0.15s;
+  }
+  .icon-btn:hover { background: var(--surface-3); }
+  .icon-btn.active-chip { border-color: var(--amber); color: var(--amber); background: var(--amber-bg); }
+
+  /* ── 2. Смужка Live-просмотра ── */
+  .live-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 0; }
+  .live-inner { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; }
+  .live-badge { background: var(--amber-bg); border: 1px solid var(--amber-border); color: var(--amber); font-weight: 700; padding: 3px 9px; border-radius: 6px; }
+  .live-label { color: var(--text-muted); }
+  .field-chip { background: var(--surface-3); border: 1px solid var(--border); color: var(--text); padding: 3px 9px; border-radius: 6px; font-weight: 500; }
+  .field-chip.off { opacity: 0.4; text-decoration: line-through; color: var(--text-dim); }
+
+  /* ── 3. Навігація ── */
+  .nav-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 18px 0; }
+  .tabs-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .tab-btn {
+    padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600;
+    color: var(--text-muted); display: inline-flex; align-items: center; gap: 7px; transition: 0.15s;
+  }
+  .tab-btn:hover { color: var(--text); background: var(--surface-2); }
+  .tab-btn.active { background: #f59e0b; color: #0b0e14; font-weight: 700; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25); }
+  .tab-count { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border-radius: 99px; background: rgba(0, 0, 0, 0.22); }
+  .tab-count.red { background: var(--red); color: #fff; }
+
+  .btn-amber {
+    background: #f59e0b; color: #0b0e14; font-weight: 700; font-size: 13px;
+    padding: 9px 16px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25); transition: 0.15s;
+  }
+  .btn-amber:hover { filter: brightness(1.08); }
+
+  /* ── 4. KPI-картки ── */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+  .kpi-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; position: relative; }
+  .kpi-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .kpi-title { font-size: 12.5px; color: var(--text-muted); font-weight: 500; }
+  .kpi-ico { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .kpi-num { font-size: 24px; font-weight: 800; font-family: var(--mono); letter-spacing: -0.02em; }
+  .kpi-num small { font-size: 14px; color: var(--text-muted); font-weight: 600; }
+  .kpi-foot { font-size: 11.5px; color: var(--text-dim); margin-top: 4px; }
+
+  /* ── 5. Панель пошуку та фільтрів ── */
+  .filter-bar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 10px 14px; margin-bottom: 18px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  }
+  .search-box { flex: 1; min-width: 220px; display: flex; align-items: center; gap: 8px; color: var(--text-muted); }
+  .search-box input { width: 100%; background: transparent; border: none; color: var(--text); font-size: 13.5px; }
+  .search-box input:focus { outline: none; }
+  .filter-select { background: var(--surface-2); border: 1px solid var(--border); padding: 7px 12px; border-radius: 9px; font-size: 12.5px; font-weight: 600; }
+  .view-toggle { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); padding: 3px; border-radius: 9px; }
+  .view-toggle button { padding: 5px 11px; border-radius: 7px; font-size: 12.5px; font-weight: 600; color: var(--text-muted); display: inline-flex; align-items: center; gap: 5px; }
+  .view-toggle button.active { background: #f59e0b; color: #0b0e14; font-weight: 700; }
+
+  /* ── 6. Канбан-дошка ── */
+  .board-grid { display: grid; grid-template-columns: repeat(4, minmax(280px, 1fr)); gap: 14px; overflow-x: auto; padding-bottom: 14px; }
+  .b-col { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px; min-height: 520px; display: flex; flex-direction: column; gap: 12px; }
+  .b-col-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 6px; }
+  .b-col-title { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
+  .b-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .b-badge { width: 24px; height: 24px; border-radius: 50%; background: var(--surface-3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11.5px; font-weight: 700; color: var(--text-muted); }
+
+  .card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 13px; cursor: pointer; transition: transform 0.14s, border-color 0.14s, box-shadow 0.14s; }
+  .card:hover { transform: translateY(-2px); border-color: #364159; box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.7); }
+  .c-row1 { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 9px; }
+  .c-left-tags { display: flex; align-items: center; gap: 7px; }
+  .id-pill { font-family: var(--mono); font-size: 11px; font-weight: 700; background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); padding: 2px 7px; border-radius: 6px; }
+  .cat-tag { font-size: 12px; font-weight: 600; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px; }
+  .prio-pill { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+  .prio-crit { background: var(--red-bg); color: #f87171; border: 1px solid var(--red-border); }
+  .prio-high { background: var(--amber-bg); color: #fbbf24; border: 1px solid var(--amber-border); }
+  .prio-norm { background: var(--surface-3); color: var(--text-muted); border: 1px solid var(--border); }
+
+  .c-row2 { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .c-model { font-size: 15px; font-weight: 700; color: var(--text); }
+  .c-qty { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--amber); }
+  .c-whom { font-size: 12.5px; color: var(--text-muted); margin-bottom: 2px; }
+  .c-whom b { color: var(--text); font-weight: 600; }
+  .c-row3 { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-dim); margin-bottom: 9px; }
+  .c-row3 span b { color: var(--text-muted); font-weight: 600; }
+  .c-wish { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.35; }
+  .c-addr { background: var(--green-bg); border: 1px solid var(--green-border); border-radius: 8px; padding: 7px 10px; font-size: 11.5px; color: var(--green); margin-bottom: 10px; line-height: 1.35; display: flex; align-items: flex-start; gap: 6px; }
+  .c-foot { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid var(--border); font-size: 11.5px; color: var(--text-dim); }
+  .c-open { color: var(--text-muted); font-weight: 600; }
+  .card:hover .c-open { color: var(--amber); }
+  .locked-txt { color: var(--text-dim); font-style: italic; font-size: 12px; }
+
+  /* ── Таблиця ── */
+  .tbl-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th { font-size: 11.5px; color: var(--text-muted); background: var(--surface-2); text-transform: uppercase; letter-spacing: 0.04em; }
+  tr.tr-click { cursor: pointer; }
+  tr.tr-click:hover { background: var(--surface-2); }
+
+  /* ── 7. Вкладка СТАТИСТИКА (Звіт для скріншота) ── */
+  .stats-controls {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px 18px; margin-bottom: 18px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .stats-row-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+  .period-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .p-pill {
+    padding: 6px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 600;
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted);
+  }
+  .p-pill:hover { color: var(--text); }
+  .p-pill.on { background: var(--amber); color: #0b0e14; border-color: var(--amber); font-weight: 700; }
+
+  .date-range { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); }
+  .date-range input {
+    background: var(--surface-2); border: 1px solid var(--border);
+    padding: 6px 10px; border-radius: 8px; font-size: 12.5px; color: var(--text);
+  }
+
+  .vis-toggles {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    padding-top: 12px; border-top: 1px solid var(--border);
+  }
+  .vis-toggles span.lbl { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-right: 4px; }
+
+  .report-sheet {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 24px;
+  }
+  .rep-header {
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+    gap: 12px; padding-bottom: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--border);
+  }
+  .rep-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; display: flex; align-items: center; gap: 10px; }
+  .rep-period-badge {
+    background: var(--amber-bg); border: 1px solid var(--amber-border);
+    color: var(--amber); font-weight: 700; font-size: 13px; padding: 5px 13px; border-radius: 99px;
+  }
+
+  .rep-totals {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px; margin-bottom: 22px;
+  }
+  .rep-tot-box {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px 18px;
+  }
+  .rep-tot-box.highlight {
+    background: linear-gradient(135deg, rgba(245,158,11,0.14), rgba(234,88,12,0.08));
+    border-color: var(--amber-border);
+  }
+  .rep-tot-lbl { font-size: 12.5px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
+  .rep-tot-val { font-family: var(--mono); font-size: 30px; font-weight: 800; color: var(--text); }
+  .rep-tot-box.highlight .rep-tot-val { color: var(--amber); }
+
+  .rep-columns {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: 16px;
+  }
+  .rep-block {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px 18px;
+  }
+  .rep-block-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+  .rep-block-head h3 { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
+  .rep-block-sum { font-family: var(--mono); font-weight: 800; font-size: 14px; color: var(--amber); }
+
+  .model-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 11px; }
+  .model-row:last-child { margin-bottom: 0; }
+  .model-top { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+  .model-name { font-weight: 600; color: var(--text); }
+  .model-qty { font-family: var(--mono); font-weight: 700; color: var(--text); }
+  .model-bar { height: 7px; background: var(--surface-3); border-radius: 99px; overflow: hidden; }
+  .model-fill { height: 100%; border-radius: 99px; }
+
+  body.screenshot-mode .header-top,
+  body.screenshot-mode .live-bar,
+  body.screenshot-mode .nav-bar,
+  body.screenshot-mode .stats-controls {
+    display: none !important;
+  }
+  body.screenshot-mode { padding-top: 24px; }
+  .exit-shot-btn {
+    position: fixed; bottom: 20px; right: 20px; z-index: 99;
+    background: #f59e0b; color: #0b0e14; font-weight: 700;
+    padding: 10px 16px; border-radius: 99px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    display: none;
+  }
+  body.screenshot-mode .exit-shot-btn { display: inline-flex; align-items: center; gap: 6px; }
+
+  /* ── Вкладка "Настройка ползунков (Доступ)" ── */
+  .perm-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 16px; }
+  .perm-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .perm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px; }
+  .perm-col { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  .perm-col h4 { font-size: 11.5px; color: var(--amber); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 10px; }
+  .p-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .p-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .p-row strong { display: block; font-size: 13px; }
+  .p-row small { display: block; font-size: 11.5px; color: var(--text-muted); }
+
+  .sw { position: relative; display: inline-block; width: 42px; height: 23px; flex: 0 0 42px; }
+  .sw input { opacity: 0; width: 0; height: 0; }
+  .sl { position: absolute; cursor: pointer; inset: 0; background: var(--surface-3); border: 1px solid var(--border); border-radius: 99px; transition: 0.2s; }
+  .sl:before { position: absolute; content: ""; height: 17px; width: 17px; left: 2px; bottom: 2px; background: #fff; border-radius: 50%; transition: 0.2s; }
+  .sw input:checked + .sl { background: var(--green); border-color: var(--green); }
+  .sw input:checked + .sl:before { transform: translateX(19px); }
+  .sw input:disabled + .sl { opacity: 0.4; }
+
+  /* ── Drawer ── */
+  .shade { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(3px); display: none; z-index: 40; }
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(460px, 100%); background: var(--surface); border-left: 1px solid var(--border); z-index: 50; padding: 22px; overflow-y: auto; transform: translateX(105%); transition: transform 0.22s ease; }
+  .open .shade { display: block; }
+  .open .drawer { transform: translateX(0); }
+  .fld { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+  .fld label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+  .fld input, .fld textarea, .fld select { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-size: 13.5px; }
+  .fld input:focus, .fld textarea:focus, .fld select:focus { outline: none; border-color: var(--amber); }
+  .st-btns { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 16px; }
+  .st-btns button { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; background: var(--surface-2); border: 1px solid var(--border); }
+  .st-btns button.cur { background: #f59e0b; color: #0b0e14; border-color: #f59e0b; font-weight: 700; }
+
+  /* Быстрые пилюли выбора модели, количества и волонтера */
+  .quick-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .q-pill {
+    padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 600;
+    background: var(--surface-3); border: 1px solid var(--border); color: var(--text-muted);
+    transition: 0.14s;
+  }
+  .q-pill:hover { border-color: var(--amber); color: var(--text); }
+  .q-pill.active { background: var(--amber-bg); border-color: var(--amber); color: var(--amber); }
+
+  #toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--surface-3); border: 1px solid var(--amber); color: var(--text); padding: 9px 18px; border-radius: 10px; font-weight: 600; font-size: 13px; opacity: 0; pointer-events: none; transition: 0.2s; z-index: 60; }
+  #toast.on { opacity: 1; }
+
+  @media (max-width: 1100px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 720px) {
+    .container { padding: 0 12px; }
+    .board-grid { display: flex; scroll-snap-type: x mandatory; }
+    .b-col { flex: 0 0 88%; scroll-snap-align: start; }
+  }
+</style>
+</head>
+<body>
+
+<button class="exit-shot-btn" id="exitShotBtn">✕ Вийти з режиму скріншота</button>
+
+<!-- 1. Верхній Header -->
+<header class="header-top">
+  <div class="container header-inner">
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <div class="brand-row">
+          <span class="brand-name">Print&Power Team</span>
+          <span class="sheet-pill"><span class="sheet-dot"></span> Sheets «Очередь»</span>
+        </div>
+        <div class="brand-sub">CRM очереди производства АКБ, фонарей и Telegram-бота</div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="role-switcher">
+        <span>👁 Смотреть CRM как:</span>
+        <select id="roleSelect"><option value="">Завантаження...</option></select>
+      </div>
+      <button class="icon-btn" id="syncBtn">⟳ Синхронизация</button>
+      <button class="icon-btn" id="themeBtn" title="Змінити тему">☀️</button>
+    </div>
+  </div>
+</header>
+
+<!-- 2. Смужка Live-просмотра -->
+<div class="live-bar">
+  <div class="container live-inner" id="liveBarContent"></div>
+</div>
+
+<div class="container">
+  <!-- 3. Навігація -->
+  <div class="nav-bar">
+    <div class="tabs-wrap" id="tabsWrap">
+      <button class="tab-btn active" data-tab="board">📋 Очередь заказов <span class="tab-count" id="cntOrders">0</span></button>
+      <button class="tab-btn" data-tab="stats" id="tabStats" style="display:none">📊 Статистика</button>
+      <button class="tab-btn" data-tab="perms" id="tabPerms" style="display:none">🎛 Настройка ползунков (Доступ) <span class="tab-count" id="cntUsers">0</span></button>
+      <button class="tab-btn" data-tab="pending" id="tabPending" style="display:none">👥 Заявки «Очікують» <span class="tab-count red" id="cntPend">0</span></button>
+      <button class="tab-btn" data-tab="logs" id="tabLogs" style="display:none">🕒 Лог бота</button>
+    </div>
+
+    <button class="btn-amber" id="newOrderBtn">+ Новый заказ</button>
+  </div>
+
+  <!-- 4. KPI-картки -->
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <!-- 5. Панель пошуку та фільтрів -->
+  <div class="filter-bar" id="filterBar">
+    <div class="search-box">
+      <span>🔍</span>
+      <input id="searchInp" type="search" placeholder="Поиск по ID, модели или подразделению...">
+    </div>
+    <select class="filter-select" id="catSel">
+      <option value="all">Все категории</option>
+      <option value="PowerBank">PowerBank</option>
+      <option value="Ліхтарі">Ліхтарі</option>
+    </select>
+    <select class="filter-select" id="stSel">
+      <option value="all">Все статусы</option>
+      <option value="Прийнятий">Прийнятий</option>
+      <option value="В роботі">В роботі</option>
+      <option value="Очікує відправку">Очікує відправку</option>
+      <option value="Відправлено">Відправлено</option>
+    </select>
+    <div class="view-toggle">
+      <button class="active" data-v="kanban">⊞ Канбан</button>
+      <button data-v="table">☰ Таблица</button>
+    </div>
+  </div>
+
+  <!-- 6. Основний контент -->
+  <div id="appBody"><p style="text-align:center;padding:50px;color:var(--text-muted)">Синхронізація з Google Таблицею «Очередь»...</p></div>
+</div>
+
+<div id="drWrap">
+  <div class="shade" id="shade"></div>
+  <aside class="drawer" id="drawer"></aside>
+</div>
+<div id="toast"></div>
+
+<script>
+var KEY = window.KEY || "";
+var OWNER = false, IS_ADMIN = false, ME = { id: "", name: "" }, PERMS = {};
+var AC = null, LOGS = null, SIM_ID = "";
+var ORDERS = [], BASE_PB = 0, BASE_FL = 0;
+var TAB = "board", VIEW = "kanban", CAT = "all", ST_FILTER = "all", QUERY = "", CUR_ID = null;
+
+var STAT_PERIOD = "month";
+var STAT_FROM = "", STAT_TO = "";
+var STAT_STATUS_MODE = "done_and_work";
+var STAT_BLOCKS = {
+  totals: true,
+  pbModels: true,
+  flModels: true,
+  byWhom: false,
+  byAuthor: false
+};
+
+var COLUMNS = [
+  { key: "Прийнятий",        title: "Прийнятий",        color: "#f59e0b" },
+  { key: "В роботі",         title: "В роботі",         color: "#3b82f6" },
+  { key: "Очікує відправку", title: "Очікує відправку", color: "#a855f7" },
+  { key: "Відправлено",      title: "Відправлено",      color: "#10b981" }
+];
+
+try { Telegram.WebApp.ready(); Telegram.WebApp.expand(); } catch (e) {}
+
+var $ = function(id) { return document.getElementById(id); };
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function(c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function fmtDate(ts) { if (!ts) return "—"; var d = new Date(ts); return ("0"+d.getDate()).slice(-2)+"."+("0"+(d.getMonth()+1)).slice(-2)+"."+d.getFullYear(); }
+function isoDate(d) { return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2); }
+function toast(m) { var t = $("toast"); t.textContent = m; t.className = "on"; setTimeout(function(){ t.className = ""; }, 2300); }
+
+function setPeriodPreset(p) {
+  STAT_PERIOD = p;
+  var now = new Date();
+  var y = now.getFullYear(), m = now.getMonth();
+  if (p === "week") {
+    STAT_FROM = isoDate(new Date(now.getTime() - 6 * 864e5));
+    STAT_TO = isoDate(now);
+  } else if (p === "month") {
+    STAT_FROM = isoDate(new Date(y, m, 1));
+    STAT_TO = isoDate(now);
+  } else if (p === "prev_month") {
+    STAT_FROM = isoDate(new Date(y, m - 1, 1));
+    STAT_TO = isoDate(new Date(y, m, 0));
+  } else if (p === "quarter") {
+    STAT_FROM = isoDate(new Date(y, m - 2, 1));
+    STAT_TO = isoDate(now);
+  } else if (p === "year") {
+    STAT_FROM = isoDate(new Date(y, 0, 1));
+    STAT_TO = isoDate(now);
+  } else if (p === "365d") {
+    STAT_FROM = isoDate(new Date(now.getTime() - 365 * 864e5));
+    STAT_TO = isoDate(now);
+  } else {
+    STAT_FROM = "";
+    STAT_TO = "";
+  }
+}
+setPeriodPreset("month");
+
+function gas(fn, args, ok) {
+  var r = google.script.run.withSuccessHandler(ok || function(){}).withFailureHandler(function(e){ toast("⚠️ " + (e.message || e)); });
+  r[fn].apply(r, [KEY].concat(args));
+}
+
+function activePerms() {
+  if (OWNER && SIM_ID && AC) {
+    var u = AC.users.filter(function(x){ return x.id === SIM_ID; })[0];
+    if (u && u.perms) return u.perms;
+  }
+  return PERMS;
+}
+
+function activeUserName() {
+  if (OWNER && SIM_ID && AC) {
+    var u = AC.users.filter(function(x){ return x.id === SIM_ID; })[0];
+    if (u) return u.name || u.id;
+  }
+  return ME.name || "Користувач";
+}
+
+function syncData() {
+  google.script.run
+    .withSuccessHandler(function(r) {
+      ORDERS = r.orders || [];
+      BASE_PB = r.basePB || 0;
+      BASE_FL = r.baseFL || 0;
+      OWNER = !!r.owner;
+      IS_ADMIN = !!r.isAdmin;
+      ME = r.me || { id: "", name: "" };
+      PERMS = r.perms || {};
+
+      $("tabStats").style.display   = OWNER ? "inline-flex" : "none";
+      $("tabPerms").style.display   = OWNER ? "inline-flex" : "none";
+      $("tabPending").style.display = OWNER ? "inline-flex" : "none";
+      $("tabLogs").style.display    = OWNER ? "inline-flex" : "none";
+      $("cntPend").textContent      = r.pendN || 0;
+
+      if (OWNER) {
+        loadUsers(true);
+      } else {
+        $("roleSelect").innerHTML = '<option value="">' + esc(ME.name) + '</option>';
+        $("roleSelect").disabled = true;
+      }
+      render();
+    })
+    .withFailureHandler(function(e) {
+      $("appBody").innerHTML = '<p style="text-align:center;padding:40px;color:var(--red)">Помилка: ' + esc(e.message || e) + '</p>';
+    })
+    .crmGetData(KEY);
+}
+
+function loadUsers(silent) {
+  gas("crmGetUsers", [], function(res) {
+    AC = res;
+    $("cntUsers").textContent = AC.users.length;
+    var sel = $("roleSelect"), prev = SIM_ID;
+    sel.disabled = false;
+    sel.innerHTML = '<option value="">' + esc(ME.name) + ' — Супер-админ</option>' +
+      AC.users.filter(function(u){ return u.id !== ME.id; }).map(function(u){
+        var rLabel = u.admin ? "Адмін" : "Користувач";
+        return '<option value="' + esc(u.id) + '">' + esc(u.name || u.id) + ' (' + rLabel + ')</option>';
+      }).join("");
+    sel.value = prev;
+    if (!silent) render();
+  });
+}
+
+$("roleSelect").onchange = function() { SIM_ID = this.value; render(); };
+
+function getVisibleOrders() {
+  var p = activePerms();
+  var effId = (OWNER && SIM_ID) ? SIM_ID : ME.id;
+  var isOwnerView = OWNER && !SIM_ID;
+  var q = QUERY.toLowerCase();
+
+  return ORDERS.filter(function(o) {
+    if (o.status === "Відмовлено") return false;
+    var isMine = String(o.chat) === String(effId);
+    if (!isOwnerView) {
+      if (!p.seeAllOrders && !isMine) return false;
+      if (p.onlyActive && o.status === "Відправлено") return false;
+    }
+    if (CAT !== "all" && o.cat !== CAT) return false;
+    if (ST_FILTER !== "all") {
+      var normSt = (o.status === "Новий") ? "Прийнятий" : o.status;
+      if (normSt !== ST_FILTER) return false;
+    }
+    if (!q) return true;
+    var txt = [o.id, (isOwnerView||isMine||p.showWhom)?o.whom:"", (isOwnerView||isMine||p.showModelQty)?o.model:"", (isOwnerView||isMine||p.showAuthor)?o.name:""].join(" ").toLowerCase();
+    return txt.indexOf(q) > -1;
+  }).map(function(o) {
+    var isMine = String(o.chat) === String(effId);
+    if (isOwnerView || isMine) return o;
+    return Object.assign({}, o, {
+      name:  p.showAuthor   ? o.name  : "🔒 Приховано",
+      whom:  p.showWhom     ? o.whom  : "🔒 Приховано",
+      model: p.showModelQty ? o.model : "🔒 Приховано",
+      qty:   p.showModelQty ? o.qty   : 0,
+      wish:  p.showWish     ? o.wish  : "🔒 Приховано",
+      addr:  p.showAddr     ? o.addr  : (o.addr ? "🔒 Приховано" : "")
+    });
+  });
+}
+
+function renderLiveBar() {
+  var p = activePerms();
+  var isOwnerView = OWNER && !SIM_ID;
+  var chips = [
+    { label: isOwnerView || p.seeAllOrders ? "Очередь: Вся" : "Очередь: Только свои", on: true },
+    { label: "Товар и кол-во", on: isOwnerView || p.showModelQty },
+    { label: "Кому (подразделение)", on: isOwnerView || p.showWhom },
+    { label: "Кто заказал", on: isOwnerView || p.showAuthor },
+    { label: "Пожелания", on: isOwnerView || p.showWish },
+    { label: "Данные НП (ФИО/тел)", on: isOwnerView || p.showAddr },
+    { label: "Заметки админа", on: isOwnerView || IS_ADMIN }
+  ];
+
+  $("liveBarContent").innerHTML =
+    '<span class="live-badge">Live-просмотр: ' + esc(activeUserName().split(" ")[0]) + '</span>' +
+    '<span class="live-label">Видит:</span>' +
+    chips.map(function(c){ return '<span class="field-chip' + (c.on ? '' : ' off') + '">' + c.label + '</span>'; }).join("");
+}
+
+function render() {
+  renderLiveBar();
+  var p = activePerms();
+  var isOwnerView = OWNER && !SIM_ID;
+  $("newOrderBtn").style.display = (isOwnerView || p.canEditOrders) ? "inline-flex" : "none";
+
+  var vis = getVisibleOrders();
+  $("cntOrders").textContent = vis.length;
+
+  var pbActive = 0, pbDone = 0, flActive = 0, flDone = 0, inShop = 0, readyCnt = 0, sentCnt = 0;
+  vis.forEach(function(o) {
+    var q = o.qty || 0;
+    if (o.status === "Відправлено") {
+      sentCnt++;
+      if (o.cat === "PowerBank") pbDone += q; else flDone += q;
+    } else {
+      if (o.cat === "PowerBank") pbActive += q; else flActive += q;
+      if (o.status === "Очікує відправку") readyCnt++;
+      else inShop++;
+    }
+  });
+
+  var showKpiAndFilter = (TAB === "board");
+  $("kpiRow").style.display = showKpiAndFilter ? "grid" : "none";
+  $("filterBar").style.display = showKpiAndFilter ? "flex" : "none";
+
+  if (showKpiAndFilter) {
+    $("kpiRow").innerHTML =
+      '<div class="kpi-box"><div class="kpi-top"><span class="kpi-title">PowerBank в очереди / выдано</span><span class="kpi-ico" style="background:var(--amber-bg);color:var(--amber)">⚡</span></div>' +
+      '<div class="kpi-num">' + pbActive + ' шт <small>/ ' + (pbDone + BASE_PB) + '</small></div><div class="kpi-foot">20K — 100K mAh сборки</div></div>' +
+
+      '<div class="kpi-box"><div class="kpi-top"><span class="kpi-title">Ліхтарі (шолом / кліпса)</span><span class="kpi-ico" style="background:rgba(59,130,246,0.14);color:var(--blue)">🔦</span></div>' +
+      '<div class="kpi-num">' + flActive + ' шт <small>/ ' + (flDone + BASE_FL) + '</small></div><div class="kpi-foot">Червоні / сині / зелені</div></div>' +
+
+      '<div class="kpi-box"><div class="kpi-top"><span class="kpi-title">Прийнято / В роботі</span><span class="kpi-ico" style="background:rgba(168,85,247,0.14);color:var(--purple)">🔧</span></div>' +
+      '<div class="kpi-num">' + inShop + '</div><div class="kpi-foot">Активных заявок в цеху</div></div>' +
+
+      '<div class="kpi-box"><div class="kpi-top"><span class="kpi-title">Очікує відправку / Відправлено</span><span class="kpi-ico" style="background:var(--green-bg);color:var(--green)">📦</span></div>' +
+      '<div class="kpi-num">' + readyCnt + ' <small>/ ' + sentCnt + '</small></div><div class="kpi-foot">Готовы к НП / Выполнены</div></div>';
+  }
+
+  if (TAB === "board") {
+    $("appBody").innerHTML = (VIEW === "kanban") ? renderKanban(vis) : renderTable(vis);
+  } else if (TAB === "stats") {
+    $("appBody").innerHTML = renderStatsReport();
+  } else if (TAB === "perms") {
+    $("appBody").innerHTML = renderPermsTab();
+  } else if (TAB === "pending") {
+    $("appBody").innerHTML = renderPendingTab();
+  } else if (TAB === "logs") {
+    $("appBody").innerHTML = renderLogsTab();
+  }
+
+  bindInteractions();
+}
+
+// ── ВКЛАДКА СТАТИСТИКА (З КОНСТРУКТОРОМ ДЛЯ СКРІНШОТА) ───────
+function renderStatsReport() {
+  if (!OWNER) return '<p style="text-align:center;padding:40px">Доступ лише для власника.</p>';
+
+  var tFrom = STAT_FROM ? new Date(STAT_FROM + "T00:00:00").getTime() : 0;
+  var tTo   = STAT_TO   ? new Date(STAT_TO   + "T23:59:59").getTime() : 9e15;
+
+  var filtered = ORDERS.filter(function(o) {
+    if (o.status === "Відмовлено" || !o.status) return false;
+    if (STAT_STATUS_MODE === "done_only" && o.status !== "Відправлено") return false;
+    if (tFrom || tTo < 9e15) {
+      if (!o.date || o.date < tFrom || o.date > tTo) return false;
+    }
+    return true;
+  });
+
+  var pbMap = {}, flMap = {}, whomMap = {}, authorMap = {};
+  var pbSum = 0, flSum = 0;
+
+  filtered.forEach(function(o) {
+    var q = o.qty || 0;
+    var mod = String(o.model || "Інше").trim();
+    if (o.cat === "PowerBank") {
+      pbSum += q;
+      pbMap[mod] = (pbMap[mod] || 0) + q;
+    } else {
+      flSum += q;
+      flMap[mod] = (flMap[mod] || 0) + q;
+    }
+    var wh = String(o.whom || "—").trim();
+    whomMap[wh] = (whomMap[wh] || 0) + q;
+    var au = String(o.name || "—").trim();
+    authorMap[au] = (authorMap[au] || 0) + q;
+  });
+
+  var isAllTime = (!STAT_FROM && !STAT_TO);
+  var totalPbDisplay = pbSum + (isAllTime ? BASE_PB : 0);
+  var totalFlDisplay = flSum + (isAllTime ? BASE_FL : 0);
+  var grandTotal = totalPbDisplay + totalFlDisplay;
+
+  function sortEntries(obj) {
+    return Object.keys(obj).map(function(k){ return [k, obj[k]]; }).sort(function(a,b){ return b[1] - a[1]; });
+  }
+
+  function renderModelList(entries, colorHex) {
+    if (!entries.length) return '<div style="color:var(--text-dim);font-size:12.5px;padding:12px 0">Немає даних за обраний період</div>';
+    var max = entries[0][1] || 1;
+    return entries.map(function(e) {
+      var pct = Math.max(4, Math.round((e[1] / max) * 100));
+      return '<div class="model-row">' +
+        '<div class="model-top"><span class="model-name">' + esc(e[0]) + '</span><span class="model-qty">' + e[1] + ' шт.</span></div>' +
+        '<div class="model-bar"><div class="model-fill" style="width:' + pct + '%;background:' + colorHex + '"></div></div>' +
+      '</div>';
+    }).join("");
+  }
+
+  var periodNames = {
+    week: "За 7 днів (тиждень)",
+    month: "За поточний місяць",
+    prev_month: "За минулий місяць",
+    quarter: "За 3 місяці (квартал)",
+    year: "З початку року",
+    "365d": "За останні 365 днів",
+    all: "За весь час"
+  };
+  var periodLabel = STAT_FROM && STAT_TO
+    ? (STAT_FROM.split("-").reverse().join(".") + " — " + STAT_TO.split("-").reverse().join("."))
+    : (periodNames[STAT_PERIOD] || "За весь час");
+
+  var toggleChips = [
+    { k: "totals",   label: "Загальні лічильники" },
+    { k: "pbModels", label: "Моделі PowerBank" },
+    { k: "flModels", label: "Моделі Ліхтарів" },
+    { k: "byWhom",   label: "Підрозділи (Кому)" },
+    { k: "byAuthor", label: "Волонтери (Хто)" }
+  ];
+
+  var controlsHtml = '<div class="stats-controls">' +
+    '<div class="stats-row-top">' +
+      '<div class="period-pills">' +
+        [
+          ["week","Тиждень"], ["month","Цей місяць"], ["prev_month","Минулий місяць"],
+          ["quarter","Квартал"], ["year","Цей рік"], ["365d","365 днів"], ["all","Весь час"]
+        ].map(function(p){
+          return '<button class="p-pill ' + (STAT_PERIOD === p[0] ? 'on' : '') + '" data-preset="' + p[0] + '">' + p[1] + '</button>';
+        }).join("") +
+      '</div>' +
+      '<div class="date-range">' +
+        '<span>Від</span><input type="date" id="stDateFrom" value="' + STAT_FROM + '">' +
+        '<span>До</span><input type="date" id="stDateTo" value="' + STAT_TO + '">' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="vis-toggles">' +
+      '<span class="lbl">👁 Поля на скріншоті:</span>' +
+      toggleChips.map(function(c){
+        var on = !!STAT_BLOCKS[c.k];
+        return '<button class="icon-btn ' + (on ? 'active-chip' : '') + '" data-stblk="' + c.k + '">' + (on ? '✓ ' : '✕ ') + c.label + '</button>';
+      }).join("") +
+      '<select class="filter-select" id="stModeSel" style="margin-left:auto">' +
+        '<option value="done_and_work"' + (STAT_STATUS_MODE==="done_and_work"?" selected":"") + '>Усі прийняті + відправлені</option>' +
+        '<option value="done_only"' + (STAT_STATUS_MODE==="done_only"?" selected":"") + '>Тільки статус «Відправлено»</option>' +
+      '</select>' +
+      '<button class="btn-amber" id="enterShotBtn">📸 Режим скріншота</button>' +
+    '</div>' +
+  '</div>';
+
+  var totalsHtml = !STAT_BLOCKS.totals ? "" :
+    '<div class="rep-totals">' +
+      '<div class="rep-tot-box highlight"><div class="rep-tot-lbl">🇺🇦 ВСЬОГО ВИГОТОВЛЕНО ТА ПЕРЕДАНО</div><div class="rep-tot-val">' + grandTotal + ' шт.</div></div>' +
+      '<div class="rep-tot-box"><div class="rep-tot-lbl">🔋 Павербанки (усі ємності)</div><div class="rep-tot-val">' + totalPbDisplay + ' шт.</div></div>' +
+      '<div class="rep-tot-box"><div class="rep-tot-lbl">🔦 Ліхтарі (шолом / кліпса)</div><div class="rep-tot-val">' + totalFlDisplay + ' шт.</div></div>' +
+    '</div>';
+
+  var blocksHtml = '<div class="rep-columns">';
+  if (STAT_BLOCKS.pbModels) {
+    blocksHtml += '<div class="rep-block"><div class="rep-block-head"><h3>🔋 Павербанки по моделях</h3><span class="rep-block-sum">' + pbSum + ' шт.</span></div>' +
+      renderModelList(sortEntries(pbMap), "linear-gradient(90deg, #f59e0b, #ea580c)") +
+      (isAllTime && BASE_PB ? '<div style="margin-top:10px;font-size:11.5px;color:var(--text-dim)">+ ' + BASE_PB + ' шт. з архіву до ведення бота</div>' : '') +
+    '</div>';
+  }
+  if (STAT_BLOCKS.flModels) {
+    blocksHtml += '<div class="rep-block"><div class="rep-block-head"><h3>🔦 Ліхтарі по моделях</h3><span class="rep-block-sum" style="color:var(--blue)">' + flSum + ' шт.</span></div>' +
+      renderModelList(sortEntries(flMap), "linear-gradient(90deg, #3b82f6, #6366f1)") +
+      (isAllTime && BASE_FL ? '<div style="margin-top:10px;font-size:11.5px;color:var(--text-dim)">+ ' + BASE_FL + ' шт. з архіву до ведення бота</div>' : '') +
+    '</div>';
+  }
+  if (STAT_BLOCKS.byWhom) {
+    blocksHtml += '<div class="rep-block"><div class="rep-block-head"><h3>🎯 По підрозділах</h3><span class="rep-block-sum" style="color:var(--green)">' + (pbSum + flSum) + ' шт.</span></div>' +
+      renderModelList(sortEntries(whomMap).slice(0, 12), "#10b981") +
+    '</div>';
+  }
+  if (STAT_BLOCKS.byAuthor) {
+    blocksHtml += '<div class="rep-block"><div class="rep-block-head"><h3>👤 По волонтерах</h3><span class="rep-block-sum" style="color:var(--purple)">' + (pbSum + flSum) + ' шт.</span></div>' +
+      renderModelList(sortEntries(authorMap).slice(0, 12), "#a855f7") +
+    '</div>';
+  }
+  blocksHtml += '</div>';
+
+  var reportCard = '<div class="report-sheet">' +
+    '<div class="rep-header">' +
+      '<div class="rep-title">⚡ Print&Power Team — Звіт виробництва</div>' +
+      '<div class="rep-period-badge">📅 ' + esc(periodLabel) + '</div>' +
+    '</div>' +
+    totalsHtml +
+    blocksHtml +
+  '</div>';
+
+  return controlsHtml + reportCard;
+}
+
+function renderKanban(vis) {
+  return '<div class="board-grid">' + COLUMNS.map(function(col) {
+    var items = vis.filter(function(o) {
+      var st = (o.status === "Новий") ? "Прийнятий" : o.status;
+      return st === col.key;
+    }).sort(function(a, b) { return (b.prio ? 1 : 0) - (a.prio ? 1 : 0); });
+
+    if (col.key === "Відправлено") items = items.slice(0, 15);
+
+    return '<div class="b-col">' +
+      '<div class="b-col-head">' +
+        '<div class="b-col-title"><span class="b-dot" style="background:' + col.color + '"></span>' + col.title + '</div>' +
+        '<span class="b-badge">' + items.length + '</span>' +
+      '</div>' +
+      (items.map(renderCard).join("") || '<div style="text-align:center;color:var(--text-dim);padding:40px 0;font-size:12.5px">Нет заказов</div>') +
+    '</div>';
+  }).join("") + '</div>';
+}
+
+function renderCard(o) {
+  var prioHtml = o.prio
+    ? '<span class="prio-pill prio-crit">Критичний</span>'
+    : (o.status === "Очікує відправку" || o.status === "В роботі"
+        ? '<span class="prio-pill prio-high">Високий</span>'
+        : '<span class="prio-pill prio-norm">Звичайний</span>');
+
+  var catIcon = o.cat === "PowerBank" ? "🔋 PowerBank" : "🔦 Ліхтарі";
+  var wishHtml = (o.wish && o.wish !== "-" && o.wish !== "🔒 Приховано")
+    ? '<div class="c-wish">«' + esc(o.wish) + '»</div>'
+    : (o.wish === "🔒 Приховано" ? '<div class="c-wish locked-txt">🔒 Побажання приховано</div>' : '');
+
+  var addrHtml = "";
+  if (o.addr === "🔒 Приховано") {
+    addrHtml = '<div class="c-wish locked-txt">🔒 Дані відправки приховані</div>';
+  } else if (o.addr) {
+    addrHtml = '<div class="c-addr"><span>📦</span><span>' + esc(o.addr) + '</span></div>';
+  }
+
+  return '<div class="card" data-id="' + o.id + '">' +
+    '<div class="c-row1">' +
+      '<div class="c-left-tags"><span class="id-pill">' + esc(o.id) + '</span><span class="cat-tag">' + catIcon + '</span></div>' +
+      prioHtml +
+    '</div>' +
+    '<div class="c-row2">' +
+      '<div class="c-model">' + esc(o.model) + '</div>' +
+      (o.qty ? '<div class="c-qty">× ' + o.qty + ' шт</div>' : '') +
+    '</div>' +
+    '<div class="c-whom">Кому: <b>' + esc(o.whom) + '</b></div>' +
+    '<div class="c-row3"><span>От: <b>' + esc(o.name) + '</b></span><span>' + fmtDate(o.date) + '</span></div>' +
+    wishHtml +
+    addrHtml +
+    '<div class="c-foot"><span>Статус: ' + esc(o.status) + '</span><span class="c-open">Открыть ›</span></div>' +
+  '</div>';
+}
+
+function renderTable(vis) {
+  return '<div class="tbl-wrap"><table><thead><tr>' +
+    '<th>ID</th><th>Категорія</th><th>Модель</th><th>К-сть</th><th>Кому</th><th>Від кого</th><th>Дата</th><th>Адреса НП</th><th>Статус</th>' +
+    '</tr></thead><tbody>' +
+    vis.map(function(o) {
+      return '<tr class="tr-click" data-id="' + o.id + '">' +
+        '<td><span class="id-pill">' + esc(o.id) + '</span></td>' +
+        '<td>' + esc(o.cat) + '</td>' +
+        '<td><b>' + esc(o.model) + '</b></td>' +
+        '<td style="font-family:var(--mono);color:var(--amber);font-weight:700">' + (o.qty ? o.qty + ' шт' : '—') + '</td>' +
+        '<td>' + esc(o.whom) + '</td>' +
+        '<td>' + esc(o.name) + '</td>' +
+        '<td>' + fmtDate(o.date) + '</td>' +
+        '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">' + esc(o.addr || "—") + '</td>' +
+        '<td><b>' + esc(o.status) + '</b></td>' +
+      '</tr>';
+    }).join("") +
+    '</tbody></table></div>';
+}
+
+// ── Вкладка: Настройка ползунков (Доступ) ───────────────────
+var SLIDER_COLS = [
+  {
+    title: "1. Видимость очереди",
+    rows: [
+      { k: "crmAccess",    t: "Доступ к Mini App CRM", d: "Открытие этой панели через Telegram" },
+      { k: "seeAllOrders", t: "Видит всю очередь", d: "Выкл = видит только свои заказы" },
+      { k: "onlyActive",   t: "Только активные на сегодня", d: "Скрывает архив «Відправлено»" }
+    ]
+  },
+  {
+    title: "2. Видимость полей в чужих заказах",
+    rows: [
+      { k: "showModelQty", t: "Товар и количество", d: "Модель (mAh / фонарь) и шт." },
+      { k: "showWhom",     t: "Кому (подразделение)", d: "Позывной или номер бригады" },
+      { k: "showAuthor",   t: "Кто заказал", d: "Имя волонтера, подавшего заявку" },
+      { k: "showWish",     t: "Пожелания", d: "Гравировка, цвет, детали сборки" },
+      { k: "showAddr",     t: "Данные НП (ФИО / тел)", d: "Конфиденциальные данные отправки" }
+    ]
+  },
+  {
+    title: "3. Административные права",
+    rows: [
+      { k: "canChangeStatus", t: "Статусы цеха", d: "Прийнятий → В роботі → Очікує відправку" },
+      { k: "canSendStatus",   t: "Подтверждение отправки", d: "Статусы «Відправлено» / «Відмовлено»" },
+      { k: "canEditOrders",   t: "Редактирование и создание", d: "Добавление заказов и смена полей" },
+      { k: "canViewStats",    t: "Общая статистика", d: "Видит общие счетчики выдачи" }
+    ]
+  }
+];
+
+function renderPermsTab() {
+  if (!AC) { loadUsers(false); return '<p style="text-align:center;padding:40px">Завантаження...</p>'; }
+  return AC.users.map(function(u) {
+    var isOwnerCard = u.admin && !u.extra;
+    var perms = u.perms || {};
+    var rt = u.routes || [];
+    var roleText = isOwnerCard ? "👑 Супер-админ (Власник)" : u.admin ? "🛠 Адміністратор" : "👤 Користувач";
+
+    var btns = isOwnerCard ? '<span style="color:var(--text-muted);font-size:12px">Полный доступ ко всем настройкам</span>' :
+      (u.admin
+        ? '<button class="icon-btn" style="' + (rt.indexOf("PB")>-1?"border-color:var(--amber);color:var(--amber)":"") + '" data-ua="route_PB" data-uid="' + esc(u.id) + '">🔋 Увед. PB</button>' +
+          '<button class="icon-btn" style="' + (rt.indexOf("FL")>-1?"border-color:var(--amber);color:var(--amber)":"") + '" data-ua="route_FL" data-uid="' + esc(u.id) + '">🔦 Увед. Ліхтарі</button>' +
+          '<button class="icon-btn" style="color:var(--red)" data-ua="removeadmin" data-uid="' + esc(u.id) + '">Снять админа</button>'
+        : '<button class="icon-btn" data-ua="makeadmin" data-uid="' + esc(u.id) + '">👑 Сделать админом</button>') +
+      '<button class="icon-btn" data-sim="' + esc(u.id) + '">👁 Проверить глазами</button>';
+
+    var grid = isOwnerCard ? "" : '<div class="perm-grid">' + SLIDER_COLS.map(function(col) {
+      return '<div class="perm-col"><h4>' + col.title + '</h4>' + col.rows.map(function(r) {
+        return '<div class="p-row"><div><strong>' + r.t + '</strong><small>' + r.d + '</small></div>' +
+          '<label class="sw"><input type="checkbox" data-uid="' + esc(u.id) + '" data-pk="' + r.k + '"' + (perms[r.k] ? ' checked' : '') + '><span class="sl"></span></label></div>';
+      }).join("") + '</div>';
+    }).join("") + '</div>';
+
+    return '<div class="perm-card"><div class="perm-head">' +
+      '<div><b style="font-size:15px">' + esc(u.name || "Без імені") + '</b> <span style="margin-left:8px;font-size:12px;color:var(--amber)">' + roleText + '</span>' +
+      '<div style="font-family:var(--mono);font-size:11.5px;color:var(--text-muted)">Chat ID: ' + esc(u.id) + '</div></div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">' + btns + '</div>' +
+    '</div>' + grid + '</div>';
+  }).join("");
+}
+
+// ── Вкладка: Заявки «Очікують» ──────────────────────────────
+function renderPendingTab() {
+  if (!AC) { loadUsers(false); return '<p style="text-align:center;padding:40px">Завантаження...</p>'; }
+  var list = AC.pending || [];
+  if (!list.length) return '<p style="text-align:center;padding:40px;color:var(--text-muted)">Список «Очікують» пуст.</p>';
+  return '<div class="tbl-wrap"><table><thead><tr><th>Chat ID</th><th>Ім\'я</th><th>Username</th><th>Дата запиту</th><th>Статус</th><th>Дії</th></tr></thead><tbody>' +
+    list.map(function(p) {
+      return '<tr><td style="font-family:var(--mono)">' + esc(p.id) + '</td><td><b>' + esc(p.name) + '</b></td><td>' + esc(p.user) + '</td><td>' + fmtDate(p.date) + '</td><td><b>' + esc(p.status) + '</b></td>' +
+        '<td>' + (p.status === "PENDING"
+          ? '<button class="btn-amber" style="padding:5px 10px;font-size:12px" data-ua="approve" data-uid="' + esc(p.id) + '">✓ Одобрить</button> ' +
+            '<button class="icon-btn" style="color:var(--red)" data-ua="reject" data-uid="' + esc(p.id) + '">Отклонить</button>'
+          : '—') + '</td></tr>';
+    }).join("") + '</tbody></table></div>';
+}
+
+// ── Вкладка: Лог бота ───────────────────────────────────────
+function renderLogsTab() {
+  if (!LOGS) {
+    gas("crmGetLogs", [], function(res){ LOGS = res; render(); });
+    return '<p style="text-align:center;padding:40px;color:var(--text-muted)">Завантаження журналу логів...</p>';
+  }
+  return '<div class="tbl-wrap"><table><thead><tr><th>Дата</th><th>Тип</th><th>Об\'єкт</th><th>Деталі</th></tr></thead><tbody>' +
+    LOGS.map(function(l) {
+      return '<tr><td style="font-family:var(--mono);font-size:12px">' + esc(l.date) + '</td><td><b>' + esc(l.type) + '</b></td><td style="font-family:var(--mono);color:var(--amber)">' + esc(l.ref) + '</td><td>' + esc(l.desc) + '</td></tr>';
+    }).join("") + '</tbody></table></div>';
+}
+
+// ── Drawer редагування замовлення ───────────────────────────
+function openDrawer(id) {
+  var o = getVisibleOrders().filter(function(x){ return x.id === id; })[0];
+  if (!o) return;
+  CUR_ID = id;
+  var p = activePerms();
+  var isOwnerView = OWNER && !SIM_ID;
+  var canEdit = isOwnerView || p.canEditOrders;
+
+  var stBtns = ["Прийнятий", "В роботі", "Очікує відправку", "Відправлено", "Відмовлено"].map(function(s) {
+    var isFinal = (s === "Відправлено" || s === "Відмовлено");
+    var ok = isOwnerView || (isFinal ? p.canSendStatus : p.canChangeStatus);
+    return '<button data-st="' + s + '" class="' + (o.status === s ? 'cur' : '') + '"' + (!ok ? ' disabled style="opacity:0.35"' : '') + '>' + s + '</button>';
+  }).join("");
+
+  $("drawer").innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+      '<h2 style="font-size:19px;font-weight:800">' + esc(o.id) + ' · ' + esc(o.cat) + '</h2>' +
+      '<button class="icon-btn" id="closeDr">✕</button>' +
+    '</div>' +
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Дата заявки: ' + fmtDate(o.date) + '</div>' +
+    '<div style="font-size:12px;font-weight:700;color:var(--text-muted)">ИЗМЕНИТЬ СТАТУС:</div>' +
+    '<div class="st-btns">' + stBtns + '</div>' +
+    '<div class="fld"><label>Модель</label><input id="f_model" value="' + esc(o.model) + '"' + (!canEdit?' disabled':'') + '></div>' +
+    '<div class="fld"><label>Количество (шт)</label><input id="f_qty" type="number" value="' + esc(o.qty || "") + '"' + (!canEdit?' disabled':'') + '></div>' +
+    '<div class="fld"><label>Кому (подразделение)</label><input id="f_whom" value="' + esc(o.whom) + '"' + (!canEdit?' disabled':'') + '></div>' +
+    '<div class="fld"><label>От кого (волонтер)</label><input id="f_name" value="' + esc(o.name) + '"' + (!canEdit?' disabled':'') + '></div>' +
+    '<div class="fld"><label>Пожелания</label><textarea id="f_wish" rows="2"' + (!canEdit?' disabled':'') + '>' + esc(o.wish) + '</textarea></div>' +
+    '<div class="fld"><label>Данные для отправки (НП)</label><textarea id="f_addr" rows="2"' + (!canEdit?' disabled':'') + '>' + esc(o.addr) + '</textarea></div>' +
+    (IS_ADMIN ? '<div class="fld"><label>Заметка админа</label><textarea id="f_note" rows="2">' + esc(o.note) + '</textarea></div>' : '') +
+    (canEdit ? '<div style="display:flex;gap:8px;margin-top:14px">' +
+      '<button class="btn-amber" style="flex:1;justify-content:center" id="saveDr">💾 Сохранить изменения</button>' +
+      '<button class="icon-btn" id="prioDr">' + (o.prio ? 'Снять критичный' : '🔥 Критичный') + '</button>' +
+    '</div>' : '');
+
+  $("drWrap").className = "open";
+  $("closeDr").onclick = closeDrawer;
+
+  document.querySelectorAll("[data-st]").forEach(function(b) {
+    if (b.disabled) return;
+    b.onclick = function() {
+      if (OWNER && SIM_ID) { toast("Выйдите из режима предпросмотра"); return; }
+      var next = b.dataset.st;
+      var raw = ORDERS.filter(function(x){ return x.id === id; })[0];
+      raw.status = next; render(); openDrawer(id);
+      gas("crmSetStatus", [raw.row, raw.sn, next], function(){ toast("✅ Статус: " + next); });
+    };
+  });
+
+  if (canEdit) {
+    $("prioDr").onclick = function() {
+      if (OWNER && SIM_ID) return;
+      var raw = ORDERS.filter(function(x){ return x.id === id; })[0];
+      gas("crmTogglePriority", [raw.row, raw.sn], function(pr){ raw.prio = pr; render(); openDrawer(id); });
+    };
+    $("saveDr").onclick = function() {
+      if (OWNER && SIM_ID) return;
+      var raw = ORDERS.filter(function(x){ return x.id === id; })[0];
+      var f = {};
+      ["model","qty","whom","name","wish","addr","note"].forEach(function(k) {
+        var el = $("f_" + k); if (!el || el.value === "🔒 Приховано") return;
+        if (String(raw[k]) !== String(el.value)) f[k] = el.value;
+      });
+      if (!Object.keys(f).length) { toast("Изменений нет"); return; }
+      gas("crmEdit", [raw.row, raw.sn, f], function() {
+        Object.keys(f).forEach(function(k){ raw[k] = k === "qty" ? (parseInt(f[k]) || raw.qty) : f[k]; });
+        render(); toast("✅ Сохранено"); openDrawer(id);
+      });
+    };
+  }
+}
+
+// ── Drawer створення нового замовлення з швидкими пилюлями ───
+function openNewOrder() {
+  if (OWNER && SIM_ID) { toast("Выйдите из режима предпросмотра"); return; }
+
+  var baseModels = {
+    "PowerBank": ["20000 mAh", "30000 mAh", "40000 mAh", "50000 mAh", "70000 mAh", "90000 mAh", "100000 mAh", "40-50000 mAh"],
+    "Ліхтарі":   ["Ліхтар на шолом", "Ліхтар з кліпсою"]
+  };
+
+  var extraAuthors = ["Денис", "Оля", "Тётя Вика", "Дима", "Крєстік", "Дед", "Вова"];
+  ORDERS.forEach(function(o) {
+    if (o.model && baseModels[o.cat] && baseModels[o.cat].indexOf(o.model) === -1 && o.model !== "🔒 Приховано") {
+      baseModels[o.cat].push(o.model);
+    }
+    if (o.name && extraAuthors.indexOf(o.name) === -1 && o.name !== "🔒 Приховано" && o.name.length < 25) {
+      extraAuthors.push(o.name);
+    }
+  });
+
+  $("drawer").innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+      '<h2 style="font-size:19px;font-weight:800">+ Новый заказ</h2>' +
+      '<button class="icon-btn" id="closeDr">✕</button>' +
+    '</div>' +
+
+    '<div class="fld"><label>Категория</label>' +
+      '<select id="n_cat"><option value="PowerBank">🔋 PowerBank</option><option value="Ліхтарі">🔦 Ліхтарі</option></select>' +
+    '</div>' +
+
+    '<div class="fld"><label>Модель *</label>' +
+      '<input id="n_model" placeholder="Выберите ниже или введите вручную...">' +
+      '<div class="quick-pills" id="modelPills"></div>' +
+    '</div>' +
+
+    '<div class="fld"><label>Количество *</label>' +
+      '<input id="n_qty" type="number" value="1" min="1">' +
+      '<div class="quick-pills" id="qtyPills">' +
+        [1, 2, 3, 5, 10, 15, 20].map(function(n){ return '<button type="button" class="q-pill" data-qval="' + n + '">' + n + ' шт</button>'; }).join("") +
+      '</div>' +
+    '</div>' +
+
+    '<div class="fld"><label>Кому (подразделение / позывной) *</label>' +
+      '<input id="n_whom" placeholder="Слоники / 34 бригада">' +
+    '</div>' +
+
+    '<div class="fld"><label>От кого</label>' +
+      '<input id="n_name" value="' + esc(ME.name.replace(" (Власник)", "")) + '">' +
+      '<div class="quick-pills" id="authorPills">' +
+        extraAuthors.slice(0, 12).map(function(nm){ return '<button type="button" class="q-pill" data-aval="' + esc(nm) + '">' + esc(nm) + '</button>'; }).join("") +
+      '</div>' +
+    '</div>' +
+
+    '<div class="fld"><label>Пожелания</label><textarea id="n_wish" rows="2"></textarea></div>' +
+    '<button class="btn-amber" style="width:100%;justify-content:center;margin-top:10px" id="createOrderBtn">Создать заказ в таблице</button>';
+
+  $("drWrap").className = "open";
+  $("closeDr").onclick = closeDrawer;
+
+  function renderModelPills() {
+    var catVal = $("n_cat").value;
+    var list = baseModels[catVal] || [];
+    var curVal = $("n_model").value.trim();
+    $("modelPills").innerHTML = list.map(function(m) {
+      var act = (curVal === m) ? " active" : "";
+      return '<button type="button" class="q-pill' + act + '" data-mval="' + esc(m) + '">' + esc(m) + '</button>';
+    }).join("");
+
+    document.querySelectorAll("[data-mval]").forEach(function(btn) {
+      btn.onclick = function() {
+        $("n_model").value = btn.dataset.mval;
+        renderModelPills();
+      };
+    });
+  }
+
+  renderModelPills();
+  $("n_cat").onchange = function() {
+    $("n_model").value = "";
+    renderModelPills();
+  };
+  $("n_model").oninput = renderModelPills;
+
+  document.querySelectorAll("[data-qval]").forEach(function(btn) {
+    btn.onclick = function() {
+      $("n_qty").value = btn.dataset.qval;
+      document.querySelectorAll("[data-qval]").forEach(function(x){ x.classList.toggle("active", x === btn); });
+    };
+  });
+
+  function syncAuthorPills() {
+    var curA = $("n_name").value.trim();
+    document.querySelectorAll("[data-aval]").forEach(function(btn) {
+      btn.classList.toggle("active", btn.dataset.aval === curA);
+    });
+  }
+  syncAuthorPills();
+  $("n_name").oninput = syncAuthorPills;
+  document.querySelectorAll("[data-aval]").forEach(function(btn) {
+    btn.onclick = function() {
+      $("n_name").value = btn.dataset.aval;
+      syncAuthorPills();
+    };
+  });
+
+  $("createOrderBtn").onclick = function() {
+    var payload = {
+      cat: $("n_cat").value,
+      model: $("n_model").value.trim(),
+      qty: $("n_qty").value,
+      whom: $("n_whom").value.trim(),
+      name: $("n_name").value.trim(),
+      wish: $("n_wish").value.trim(),
+      status: "Прийнятий"
+    };
+    if (!payload.whom || !payload.model) { toast("Заполните «Кому» и «Модель»"); return; }
+    $("createOrderBtn").disabled = true;
+    gas("crmAddOrder", [payload], function(oid) { toast("✅ Создан " + oid); closeDrawer(); syncData(); });
+  };
+}
+
+function closeDrawer() { $("drWrap").className = ""; CUR_ID = null; }
+
+function bindInteractions() {
+  document.querySelectorAll(".card, .tr-click").forEach(function(el) {
+    el.onclick = function() { openDrawer(el.dataset.id); };
+  });
+  document.querySelectorAll("input[data-pk]").forEach(function(cb) {
+    cb.onchange = function() {
+      var uid = cb.dataset.uid, pk = cb.dataset.pk, val = cb.checked;
+      cb.disabled = true;
+      var patch = {}; patch[pk] = val;
+      gas("crmSaveUserPerms", [uid, patch], function(upd) {
+        cb.disabled = false;
+        if (AC) { var u = AC.users.filter(function(x){ return x.id === uid; })[0]; if (u) u.perms = upd; }
+        toast("✅ Ползунок сохранен");
+      });
+    };
+  });
+  document.querySelectorAll("[data-ua]").forEach(function(b) {
+    b.onclick = function() {
+      gas("crmUserAction", [b.dataset.uid, b.dataset.ua], function() { toast("✅ Готово"); loadUsers(false); syncData(); });
+    };
+  });
+  document.querySelectorAll("[data-sim]").forEach(function(b) {
+    b.onclick = function() { SIM_ID = b.dataset.sim; $("roleSelect").value = SIM_ID; TAB = "board"; render(); };
+  });
+
+  document.querySelectorAll("[data-preset]").forEach(function(b) {
+    b.onclick = function() { setPeriodPreset(b.dataset.preset); render(); };
+  });
+  if ($("stDateFrom")) $("stDateFrom").onchange = function() { STAT_PERIOD = "custom"; STAT_FROM = this.value; render(); };
+  if ($("stDateTo"))   $("stDateTo").onchange   = function() { STAT_PERIOD = "custom"; STAT_TO = this.value; render(); };
+  if ($("stModeSel"))  $("stModeSel").onchange  = function() { STAT_STATUS_MODE = this.value; render(); };
+  document.querySelectorAll("[data-stblk]").forEach(function(b) {
+    b.onclick = function() { var k = b.dataset.stblk; STAT_BLOCKS[k] = !STAT_BLOCKS[k]; render(); };
+  });
+  if ($("enterShotBtn")) $("enterShotBtn").onclick = function() { document.body.classList.add("screenshot-mode"); };
+}
+
+$("exitShotBtn").onclick = function() { document.body.classList.remove("screenshot-mode"); };
+
+document.querySelectorAll(".tab-btn").forEach(function(b) {
+  b.onclick = function() {
+    TAB = b.dataset.tab;
+    document.querySelectorAll(".tab-btn").forEach(function(x){ x.classList.toggle("active", x === b); });
+    render();
+  };
+});
+
+document.querySelectorAll(".view-toggle button").forEach(function(b) {
+  b.onclick = function() {
+    VIEW = b.dataset.v;
+    document.querySelectorAll(".view-toggle button").forEach(function(x){ x.classList.toggle("active", x === b); });
+    render();
+  };
+});
+
+$("searchInp").oninput = function() { QUERY = this.value; render(); };
+$("catSel").onchange = function() { CAT = this.value; render(); };
+$("stSel").onchange = function() { ST_FILTER = this.value; render(); };
+$("syncBtn").onclick = function() { LOGS = null; syncData(); toast("Синхронизировано"); };
+$("newOrderBtn").onclick = openNewOrder;
+$("shade").onclick = closeDrawer;
+$("themeBtn").onclick = function() {
+  var root = document.documentElement;
+  var isDark = root.getAttribute("data-theme") === "dark";
+  root.setAttribute("data-theme", isDark ? "light" : "dark");
+  $("themeBtn").textContent = isDark ? "🌙" : "☀️";
+};
+
+syncData();
+setInterval(function() {
+  if (!document.hidden && !CUR_ID && TAB !== "perms" && TAB !== "logs") syncData();
+}, 60000);
+document.addEventListener("visibilitychange", function() {
+  if (!document.hidden && !CUR_ID && TAB !== "perms" && TAB !== "logs") syncData();
+});
+</script>
+</body>
+</html>
