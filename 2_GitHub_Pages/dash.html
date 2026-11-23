@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Print&Power — Черга онлайн</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="api.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0e14;
+    --surface: #121620;
+    --surface-2: #181e2c;
+    --border: #232a3b;
+    --text: #f3f4f6;
+    --muted: #8b95a5;
+    --dim: #5c6678;
+    --amber: #f59e0b;
+    --amber-bg: rgba(245, 158, 11, 0.14);
+    --green: #10b981;
+    --green-bg: rgba(16, 185, 129, 0.14);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.45;
+    padding: 14px 14px 40px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .logo {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    display: flex; align-items: center; justify-content: center;
+    color: #0b0e14; font-weight: 800; font-size: 18px;
+  }
+  .title { font-weight: 800; font-size: 16px; letter-spacing: -0.02em; }
+  .sub { font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .rf-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); padding: 7px 12px; border-radius: 10px;
+    font-size: 12.5px; font-weight: 600; cursor: pointer;
+  }
+
+  .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+  .s-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 11px 12px; }
+  .s-lbl { font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+  .s-val { font-family: var(--mono); font-size: 20px; font-weight: 800; }
+
+  .filters { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 14px; padding-bottom: 2px; }
+  .f-pill {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); padding: 6px 13px; border-radius: 99px;
+    font-size: 12.5px; font-weight: 600; white-space: nowrap; cursor: pointer;
+  }
+  .f-pill.on { background: var(--amber); color: #0b0e14; border-color: var(--amber); font-weight: 700; }
+
+  .list { display: flex; flex-direction: column; gap: 10px; }
+  .item { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 13px 14px; }
+  .item.mine { border-color: rgba(245, 158, 11, 0.45); background: linear-gradient(180deg, rgba(245,158,11,0.06), var(--surface)); }
+  .item.prio { border-left: 3px solid #ef4444; }
+
+  .i-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .i-id {
+    font-family: var(--mono); font-size: 11.5px; font-weight: 700;
+    color: var(--amber); background: var(--amber-bg); padding: 2px 8px; border-radius: 6px;
+  }
+  .mine-tag {
+    font-size: 11px; font-weight: 700; color: var(--green);
+    background: var(--green-bg); padding: 2px 7px; border-radius: 6px; margin-left: 5px;
+  }
+  .i-st { font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 99px; }
+
+  .i-main { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .i-model { font-size: 15px; font-weight: 700; }
+  .i-qty { font-family: var(--mono); font-size: 14px; font-weight: 800; color: var(--amber); white-space: nowrap; }
+
+  .i-whom { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .i-whom b { color: var(--text); font-weight: 600; }
+
+  .progress { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 8px; }
+  .step { height: 4px; border-radius: 99px; background: var(--surface-2); }
+  .step.done { background: var(--green); }
+  .step.curr { background: var(--amber); }
+
+  .i-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 11.5px; color: var(--dim); }
+  .empty { text-align: center; padding: 40px 16px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <div class="logo">⚡</div>
+      <div>
+        <div class="title">Print&Power — Черга</div>
+        <div class="sub"><span class="live-dot"></span> <span id="userLabel">Оновлення...</span></div>
+      </div>
+    </div>
+    <button class="rf-btn" id="rfBtn">⟳ Оновити</button>
+  </div>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="filters" id="filters">
+    <button class="f-pill on" data-f="all">Уся черга</button>
+    <button class="f-pill" data-f="mine">⭐ Тільки мої</button>
+    <button class="f-pill" data-f="PowerBank">🔋 PowerBank</button>
+    <button class="f-pill" data-f="Ліхтарі">🔦 Ліхтарі</button>
+  </div>
+
+  <div class="list" id="list"><div class="empty">Завантаження актуальної черги...</div></div>
+</div>
+
+<script>
+var KEY = window.KEY || "";
+var ORDERS = [], ME = { id: "", name: "" }, PERMS = {}, FILTER = "all";
+
+try { Telegram.WebApp.ready(); Telegram.WebApp.expand(); } catch (e) {}
+
+var $ = function(id) { return document.getElementById(id); };
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function(c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function fmtDate(ts) { if (!ts) return ""; var d = new Date(ts); return ("0"+d.getDate()).slice(-2)+"."+("0"+(d.getMonth()+1)).slice(-2); }
+
+var ST_META = {
+  "Новий":            { step: 1, color: "#9ca3af", bg: "rgba(156,163,175,0.15)" },
+  "Прийнятий":        { step: 1, color: "#f59e0b", bg: "rgba(245,158,11,0.15)" },
+  "В роботі":         { step: 2, color: "#3b82f6", bg: "rgba(59,130,246,0.16)" },
+  "Очікує відправку": { step: 3, color: "#a855f7", bg: "rgba(168,85,247,0.16)" },
+  "Відправлено":      { step: 4, color: "#10b981", bg: "rgba(16,185,129,0.16)" }
+};
+
+function loadQueue() {
+  google.script.run
+    .withSuccessHandler(function(res) {
+      ORDERS = (res.orders || []).filter(function(o) {
+        return o.status && o.status !== "Відмовлено" && o.status !== "Відправлено";
+      });
+      ME = res.me || { id: "", name: "" };
+      PERMS = res.perms || {};
+      $("userLabel").textContent = ME.name + " · в реальному часі";
+      render();
+    })
+    .withFailureHandler(function(e) {
+      $("list").innerHTML = '<div class="empty">Помилка: ' + esc(e.message || e) + '</div>';
+    })
+    .crmGetData(KEY);
+}
+
+function render() {
+  var pbQty = 0, flQty = 0;
+  ORDERS.forEach(function(o) {
+    if (o.cat === "PowerBank") pbQty += (o.qty || 0);
+    else flQty += (o.qty || 0);
+  });
+
+  $("summary").innerHTML =
+    '<div class="s-box"><div class="s-lbl">Замовлень</div><div class="s-val" style="color:var(--amber)">' + ORDERS.length + '</div></div>' +
+    '<div class="s-box"><div class="s-lbl">🔋 PowerBank</div><div class="s-val">' + (pbQty || "—") + ' <small style="font-size:12px;color:var(--muted)">шт</small></div></div>' +
+    '<div class="s-box"><div class="s-lbl">🔦 Ліхтарі</div><div class="s-val">' + (flQty || "—") + ' <small style="font-size:12px;color:var(--muted)">шт</small></div></div>';
+
+  var vis = ORDERS.filter(function(o) {
+    if (FILTER === "mine") return !!o.mine;
+    if (FILTER === "PowerBank" || FILTER === "Ліхтарі") return o.cat === FILTER;
+    return true;
+  });
+
+  if (!vis.length) {
+    $("list").innerHTML = '<div class="empty">За вашим фільтром активних замовлень зараз немає ✅</div>';
+    return;
+  }
+
+  $("list").innerHTML = vis.map(function(o) {
+    var meta = ST_META[o.status] || ST_META["Прийнятий"];
+    var bars = [1, 2, 3, 4].map(function(n) {
+      var cls = n < meta.step ? "done" : (n === meta.step ? "curr" : "");
+      return '<div class="step ' + cls + '"></div>';
+    }).join("");
+
+    return '<div class="item' + (o.mine ? ' mine' : '') + (o.prio ? ' prio' : '') + '">' +
+      '<div class="i-top">' +
+        '<div><span class="i-id">' + (o.prio ? '🔥 ' : '') + esc(o.id) + '</span>' + (o.mine ? '<span class="mine-tag">Моє</span>' : '') + '</div>' +
+        '<span class="i-st" style="color:' + meta.color + ';background:' + meta.bg + '">' + esc(o.status) + '</span>' +
+      '</div>' +
+      '<div class="i-main">' +
+        '<div class="i-model">' + (o.cat === "PowerBank" ? "🔋 " : "🔦 ") + esc(o.model) + '</div>' +
+        (o.qty ? '<div class="i-qty">× ' + o.qty + ' шт</div>' : '') +
+      '</div>' +
+      '<div class="i-whom">Для кого: <b>' + esc(o.whom) + '</b></div>' +
+      '<div class="progress">' + bars + '</div>' +
+      '<div class="i-foot">' +
+        '<span>' + (o.name && o.name !== "🔒 Приховано" ? 'Від: ' + esc(o.name) : '') + '</span>' +
+        '<span>' + fmtDate(o.date) + '</span>' +
+      '</div>' +
+    '</div>';
+  }).join("");
+}
+
+document.querySelectorAll(".f-pill").forEach(function(b) {
+  b.onclick = function() {
+    FILTER = b.dataset.f;
+    document.querySelectorAll(".f-pill").forEach(function(x){ x.classList.toggle("on", x === b); });
+    render();
+  };
+});
+
+$("rfBtn").onclick = loadQueue;
+loadQueue();
+setInterval(function() {
+  if (!document.hidden) loadQueue();
+}, 45000);
+document.addEventListener("visibilitychange", function() {
+  if (!document.hidden) loadQueue();
+});
+</script>
+</body>
+</html>

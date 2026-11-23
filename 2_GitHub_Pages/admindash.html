@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Print&Power — Пульт адміна</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="api.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0e14;
+    --surface: #121620;
+    --surface-2: #181e2c;
+    --surface-3: #202738;
+    --border: #252d40;
+    --text: #f3f4f6;
+    --muted: #8b95a5;
+    --dim: #5c6678;
+    --amber: #f59e0b;
+    --amber-bg: rgba(245, 158, 11, 0.15);
+    --blue: #3b82f6;
+    --blue-bg: rgba(59, 130, 246, 0.16);
+    --purple: #a855f7;
+    --purple-bg: rgba(168, 85, 247, 0.16);
+    --green: #10b981;
+    --green-bg: rgba(16, 185, 129, 0.15);
+    --red: #ef4444;
+    --red-bg: rgba(239, 68, 68, 0.15);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.45;
+    padding: 14px 14px 50px;
+    -webkit-font-smoothing: antialiased;
+  }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; border: none; background: none; }
+
+  .wrap { max-width: 780px; margin: 0 auto; }
+
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .logo {
+    width: 38px; height: 38px; border-radius: 11px;
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    display: flex; align-items: center; justify-content: center;
+    color: #0b0e14; font-weight: 800; font-size: 18px;
+  }
+  .title { font-weight: 800; font-size: 16px; letter-spacing: -0.02em; }
+  .sub { font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+
+  .top-btns { display: flex; gap: 6px; }
+  .icon-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 7px 11px; border-radius: 10px; font-size: 12.5px; font-weight: 600;
+  }
+  .icon-btn:active { transform: scale(0.97); }
+
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 11px;
+  }
+  .kpi span { display: block; font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 3px; }
+  .kpi b { font-family: var(--mono); font-size: 19px; font-weight: 800; }
+
+  /* Переключатель категорий (Усі / PowerBank / Ліхтарі) */
+  .cat-bar {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 4px; border-radius: 12px; margin-bottom: 12px;
+  }
+  .cat-btn {
+    padding: 7px 8px; border-radius: 9px; font-size: 12.5px; font-weight: 600;
+    color: var(--muted); text-align: center; transition: 0.14s;
+  }
+  .cat-btn.on { background: var(--surface-3); color: var(--amber); font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+
+  .search-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 11px; padding: 8px 12px; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .search-wrap input { width: 100%; background: transparent; border: none; font-size: 13.5px; }
+  .search-wrap input:focus { outline: none; }
+
+  .tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 14px; padding-bottom: 2px; }
+  .tab {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); padding: 7px 12px; border-radius: 99px;
+    font-size: 12.5px; font-weight: 600; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .tab.on { background: var(--amber); color: #0b0e14; border-color: var(--amber); font-weight: 700; }
+  .cnt { font-family: var(--mono); font-size: 11px; background: rgba(0,0,0,0.2); padding: 1px 6px; border-radius: 99px; }
+
+  .cards { display: flex; flex-direction: column; gap: 11px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 15px; padding: 14px;
+  }
+  .card.prio { border-left: 3px solid var(--red); }
+
+  .c-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .c-left { display: flex; align-items: center; gap: 7px; }
+  .id-tag {
+    font-family: var(--mono); font-size: 12px; font-weight: 700;
+    color: var(--amber); background: var(--amber-bg); padding: 2px 8px; border-radius: 6px;
+  }
+  .prio-btn {
+    font-size: 11.5px; padding: 2px 8px; border-radius: 6px;
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
+  }
+  .prio-btn.hot { background: var(--red-bg); border-color: rgba(239,68,68,0.4); color: #f87171; font-weight: 700; }
+
+  .st-badge { font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 99px; }
+
+  .c-title { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .model { font-size: 15.5px; font-weight: 700; }
+  .qty { font-family: var(--mono); font-size: 14px; font-weight: 800; color: var(--amber); white-space: nowrap; }
+
+  .meta { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .meta b { color: var(--text); font-weight: 600; }
+
+  .wish {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 10px; font-size: 12px; color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .addr {
+    background: var(--green-bg); border: 1px solid rgba(16,185,129,0.3);
+    border-radius: 8px; padding: 7px 10px; font-size: 12px; color: var(--green);
+    margin-bottom: 10px;
+  }
+
+  .actions {
+    display: grid; grid-template-columns: 1fr auto; gap: 8px;
+    padding-top: 10px; border-top: 1px solid var(--border);
+  }
+  .btn-step {
+    padding: 9px 12px; border-radius: 10px; font-weight: 700; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: 0.14s;
+  }
+  .btn-step:active { transform: scale(0.98); }
+  .btn-work { background: var(--blue-bg); color: #60a5fa; border: 1px solid rgba(59,130,246,0.35); }
+  .btn-ready { background: var(--purple-bg); color: #c084fc; border: 1px solid rgba(168,85,247,0.35); }
+  .btn-send { background: var(--green); color: #0b0e14; }
+  .btn-undo { background: var(--surface-2); border: 1px solid var(--border); padding: 9px 12px; border-radius: 10px; font-size: 12.5px; color: var(--muted); }
+
+  .pend-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 13px; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  }
+  .btn-ok { background: var(--amber); color: #0b0e14; font-weight: 700; padding: 7px 12px; border-radius: 9px; font-size: 12.5px; }
+
+  #toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--surface-3); border: 1px solid var(--amber); color: var(--text);
+    padding: 9px 16px; border-radius: 10px; font-weight: 600; font-size: 13px;
+    opacity: 0; pointer-events: none; transition: 0.2s; z-index: 50;
+  }
+  #toast.on { opacity: 1; }
+  .empty { text-align: center; padding: 40px 16px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <div class="logo">⚡</div>
+      <div>
+        <div class="title" id="topTitle">Пульт черги (Адмін)</div>
+        <div class="sub"><span class="dot"></span> <span id="adminName">Завантаження...</span></div>
+      </div>
+    </div>
+    <div class="top-btns">
+      <button class="icon-btn" id="openFullCrm">🖥 Повна CRM</button>
+      <button class="icon-btn" id="rfBtn">⟳</button>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <!-- Переключатель категорий (показывается только если админу доступны обе категории) -->
+  <div class="cat-bar" id="catBar" style="display:none">
+    <button class="cat-btn on" data-cat="all">Усі категорії</button>
+    <button class="cat-btn" data-cat="PowerBank">🔋 PowerBank</button>
+    <button class="cat-btn" data-cat="Ліхтарі">🔦 Ліхтарі</button>
+  </div>
+
+  <div class="search-wrap">
+    <span>🔍</span>
+    <input id="qInp" type="search" placeholder="Пошук: № замовлення, бригада, модель...">
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab on" data-t="active">Усі активні <span class="cnt" id="cAll">0</span></button>
+    <button class="tab" data-t="Прийнятий">📝 Прийняті <span class="cnt" id="cNew">0</span></button>
+    <button class="tab" data-t="В роботі">⚙️ В роботі <span class="cnt" id="cWork">0</span></button>
+    <button class="tab" data-t="Очікує відправку">📦 Готові до НП <span class="cnt" id="cReady">0</span></button>
+    <button class="tab" data-t="pending" id="tabPend" style="display:none">👥 Заявки <span class="cnt" id="cPend">0</span></button>
+  </div>
+
+  <div class="cards" id="cards"><div class="empty">Завантаження замовлень...</div></div>
+</div>
+<div id="toast"></div>
+
+<script>
+var KEY = window.KEY || "";
+var ORDERS = [], PENDING = [], PERMS = {}, OWNER = false, CATS = ["PB", "FL"];
+var QUERY = "", TAB = "active", CAT_FILTER = "all";
+
+try { Telegram.WebApp.ready(); Telegram.WebApp.expand(); } catch (e) {}
+
+var $ = function(id) { return document.getElementById(id); };
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function(c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function fmtDate(ts) { if (!ts) return ""; var d = new Date(ts); return ("0"+d.getDate()).slice(-2)+"."+("0"+(d.getMonth()+1)).slice(-2); }
+function toast(m) { var t = $("toast"); t.textContent = m; t.className = "on"; setTimeout(function(){ t.className = ""; }, 2200); }
+
+function gas(fn, args, ok) {
+  var r = google.script.run.withSuccessHandler(ok || function(){}).withFailureHandler(function(e){ toast("⚠️ " + (e.message || e)); });
+  r[fn].apply(r, [KEY].concat(args));
+}
+
+function load() {
+  google.script.run
+    .withSuccessHandler(function(res) {
+      ORDERS = (res.orders || []).filter(function(o) {
+        return o.status && o.status !== "Відмовлено" && o.status !== "Відправлено";
+      });
+      PERMS = res.perms || {};
+      OWNER = !!res.owner;
+      CATS = res.cats || ["PB", "FL"];
+
+      $("adminName").textContent = (res.me ? res.me.name : "Адмін") + " · онлайн";
+
+      // Показываем фильтр категорий только если доступны обе категории (PB и FL)
+      if (OWNER || CATS.length > 1) {
+        $("catBar").style.display = "grid";
+      } else {
+        $("catBar").style.display = "none";
+        if (CATS[0] === "FL") $("topTitle").textContent = "Пульт черги · 🔦 Ліхтарі";
+        if (CATS[0] === "PB") $("topTitle").textContent = "Пульт черги · 🔋 PowerBank";
+      }
+
+      if (OWNER) {
+        $("tabPend").style.display = "inline-flex";
+        $("cPend").textContent = res.pendN || 0;
+        if (!PENDING.length && res.pendN > 0) {
+          gas("crmGetUsers", [], function(uRes) {
+            PENDING = (uRes.pending || []).filter(function(p){ return p.status === "PENDING"; });
+            $("cPend").textContent = PENDING.length;
+            if (TAB === "pending") render();
+          });
+        }
+      }
+      render();
+    })
+    .withFailureHandler(function(e) {
+      $("cards").innerHTML = '<div class="empty">Помилка: ' + esc(e.message || e) + '</div>';
+    })
+    .crmGetData(KEY);
+}
+
+function render() {
+  // Фильтруем заказы по выбранной категории (Усі / PowerBank / Ліхтарі)
+  var catOrders = ORDERS.filter(function(o) {
+    if (CAT_FILTER === "all") return true;
+    return o.cat === CAT_FILTER;
+  });
+
+  var pbQty = 0, flQty = 0, workCnt = 0, readyCnt = 0, newCnt = 0;
+  catOrders.forEach(function(o) {
+    if (o.cat === "PowerBank") pbQty += (o.qty || 0);
+    else flQty += (o.qty || 0);
+    if (o.status === "В роботі") workCnt++;
+    else if (o.status === "Очікує відправку") readyCnt++;
+    else newCnt++;
+  });
+
+  $("cAll").textContent = catOrders.length;
+  $("cNew").textContent = newCnt;
+  $("cWork").textContent = workCnt;
+  $("cReady").textContent = readyCnt;
+
+  // Если админ только по фонарикам — показываем понятные KPI именно по фонарикам
+  if (!OWNER && CATS.length === 1 && CATS[0] === "FL") {
+    $("kpis").innerHTML =
+      '<div class="kpi"><span>Замовлень</span><b style="color:var(--amber)">' + catOrders.length + '</b></div>' +
+      '<div class="kpi"><span>🔦 Ліхтарів</span><b>' + flQty + ' шт</b></div>' +
+      '<div class="kpi"><span>⚙️ В роботі</span><b style="color:var(--blue)">' + workCnt + '</b></div>' +
+      '<div class="kpi"><span>📦 На НП</span><b style="color:var(--purple)">' + readyCnt + '</b></div>';
+  } else {
+    $("kpis").innerHTML =
+      '<div class="kpi"><span>В черзі</span><b style="color:var(--amber)">' + catOrders.length + '</b></div>' +
+      '<div class="kpi"><span>🔋 АКБ</span><b>' + pbQty + '</b></div>' +
+      '<div class="kpi"><span>🔦 Ліхтарі</span><b>' + flQty + '</b></div>' +
+      '<div class="kpi"><span>📦 На НП</span><b style="color:var(--purple)">' + readyCnt + '</b></div>';
+  }
+
+  if (TAB === "pending") {
+    if (!PENDING.length) { $("cards").innerHTML = '<div class="empty">Нових заявок на доступ немає ✅</div>'; return; }
+    $("cards").innerHTML = PENDING.map(function(p) {
+      return '<div class="pend-card">' +
+        '<div><b>' + esc(p.name) + '</b> <span style="color:var(--muted)">' + esc(p.user) + '</span><br>' +
+        '<span style="font-family:var(--mono);font-size:11.5px;color:var(--dim)">ID: ' + esc(p.id) + '</span></div>' +
+        '<button class="btn-ok" data-approve="' + esc(p.id) + '">✓ Схвалити</button>' +
+      '</div>';
+    }).join("");
+    bind();
+    return;
+  }
+
+  var q = QUERY.toLowerCase();
+  var vis = catOrders.filter(function(o) {
+    if (TAB === "Прийнятий" && o.status !== "Прийнятий" && o.status !== "Новий") return false;
+    if (TAB === "В роботі" && o.status !== "В роботі") return false;
+    if (TAB === "Очікує відправку" && o.status !== "Очікує відправку") return false;
+    if (!q) return true;
+    return [o.id, o.whom, o.model, o.name].join(" ").toLowerCase().indexOf(q) > -1;
+  }).sort(function(a, b) { return (b.prio ? 1 : 0) - (a.prio ? 1 : 0); });
+
+  if (!vis.length) {
+    $("cards").innerHTML = '<div class="empty">Замовлень у цьому розділі немає</div>';
+    return;
+  }
+
+  $("cards").innerHTML = vis.map(renderCard).join("");
+  bind();
+}
+
+function renderCard(o) {
+  var stColors = {
+    "Новий":            { c: "#9ca3af", bg: "rgba(156,163,175,0.15)" },
+    "Прийнятий":        { c: "#f59e0b", bg: "rgba(245,158,11,0.15)" },
+    "В роботі":         { c: "#3b82f6", bg: "rgba(59,130,246,0.16)" },
+    "Очікує відправку": { c: "#a855f7", bg: "rgba(168,85,247,0.16)" }
+  };
+  var sc = stColors[o.status] || stColors["Прийнятий"];
+
+  var actionBtn = "";
+  if ((o.status === "Новий" || o.status === "Прийнятий") && (OWNER || PERMS.canChangeStatus)) {
+    actionBtn = '<button class="btn-step btn-work" data-next="В роботі">⚙️ Взяти в роботу</button>';
+  } else if (o.status === "В роботі" && (OWNER || PERMS.canChangeStatus)) {
+    actionBtn = '<button class="btn-step btn-ready" data-next="Очікує відправку">📦 Готово до відправки</button>';
+  } else if (o.status === "Очікує відправку" && (OWNER || PERMS.canSendStatus)) {
+    actionBtn = '<button class="btn-step btn-send" data-next="Відправлено">🚀 Підтвердити відправку</button>';
+  }
+
+  var undoBtn = (o.prev && (OWNER || PERMS.canChangeStatus))
+    ? '<button class="btn-undo" data-undo="1" title="Повернути попередній статус">↩️</button>'
+    : '<div></div>';
+
+  var wishHtml = (o.wish && o.wish !== "-" && o.wish !== "🔒 Приховано")
+    ? '<div class="wish">💬 ' + esc(o.wish) + '</div>' : '';
+
+  var addrHtml = (o.addr && o.addr !== "🔒 Приховано")
+    ? '<div class="addr">🚚 ' + esc(o.addr) + '</div>' : '';
+
+  return '<div class="card' + (o.prio ? ' prio' : '') + '" data-id="' + o.id + '">' +
+    '<div class="c-head">' +
+      '<div class="c-left">' +
+        '<span class="id-tag">' + esc(o.id) + '</span>' +
+        ((OWNER || PERMS.canEditOrders) ? '<button class="prio-btn' + (o.prio ? ' hot' : '') + '" data-prio="1">' + (o.prio ? '🔥 Термінове' : '☆ Звичайне') + '</button>' : '') +
+      '</div>' +
+      '<span class="st-badge" style="color:' + sc.c + ';background:' + sc.bg + '">' + esc(o.status) + '</span>' +
+    '</div>' +
+    '<div class="c-title">' +
+      '<div class="model">' + (o.cat === "PowerBank" ? "🔋 " : "🔦 ") + esc(o.model) + '</div>' +
+      (o.qty ? '<div class="qty">× ' + o.qty + ' шт</div>' : '') +
+    '</div>' +
+    '<div class="meta">Для кого: <b>' + esc(o.whom) + '</b>' + (o.name && o.name !== "🔒 Приховано" ? ' · Від: <b>' + esc(o.name) + '</b>' : '') + ' · ' + fmtDate(o.date) + '</div>' +
+    wishHtml +
+    addrHtml +
+    (actionBtn ? '<div class="actions">' + actionBtn + undoBtn + '</div>' : '') +
+  '</div>';
+}
+
+function bind() {
+  document.querySelectorAll(".card").forEach(function(card) {
+    var id = card.dataset.id;
+    var o = ORDERS.filter(function(x){ return x.id === id; })[0];
+    if (!o) return;
+
+    var nx = card.querySelector("[data-next]");
+    if (nx) nx.onclick = function() {
+      var nextSt = nx.dataset.next;
+      o.prev = o.status;
+      o.status = nextSt;
+      if (nextSt === "Відправлено") ORDERS = ORDERS.filter(function(x){ return x.id !== id; });
+      render();
+      gas("crmSetStatus", [o.row, o.sn, nextSt], function() {
+        toast("✅ #" + id + " → " + nextSt + " (клієнта сповіщено)");
+      });
+    };
+
+    var pr = card.querySelector("[data-prio]");
+    if (pr) pr.onclick = function() {
+      gas("crmTogglePriority", [o.row, o.sn], function(val) {
+        o.prio = val;
+        render();
+        toast(val ? "🔥 Позначено як термінове" : "Позначку знято");
+      });
+    };
+
+    var un = card.querySelector("[data-undo]");
+    if (un) un.onclick = function() {
+      gas("crmUndoStatus", [o.row, o.sn], function(prevSt) {
+        o.status = prevSt;
+        render();
+        toast("↩️ Повернуто: " + prevSt);
+      });
+    };
+  });
+
+  document.querySelectorAll("[data-approve]").forEach(function(b) {
+    b.onclick = function() {
+      var uid = b.dataset.approve;
+      gas("crmUserAction", [uid, "approve"], function() {
+        PENDING = PENDING.filter(function(p){ return p.id !== uid; });
+        $("cPend").textContent = PENDING.length;
+        render();
+        toast("✅ Доступ надано");
+      });
+    };
+  });
+}
+
+document.querySelectorAll(".cat-btn").forEach(function(b) {
+  b.onclick = function() {
+    CAT_FILTER = b.dataset.cat;
+    document.querySelectorAll(".cat-btn").forEach(function(x){ x.classList.toggle("on", x === b); });
+    render();
+  };
+});
+
+document.querySelectorAll(".tab").forEach(function(t) {
+  t.onclick = function() {
+    TAB = t.dataset.t;
+    document.querySelectorAll(".tab").forEach(function(x){ x.classList.toggle("on", x === t); });
+    render();
+  };
+});
+
+$("qInp").oninput = function() { QUERY = this.value; render(); };
+$("rfBtn").onclick = function() { load(); toast("Оновлено"); };
+$("openFullCrm").onclick = function() {
+  window.location.href = "index.html?key=" + encodeURIComponent(KEY);
+};
+
+load();
+setInterval(function() {
+  if (!document.hidden) load();
+}, 45000);
+document.addEventListener("visibilitychange", function() {
+  if (!document.hidden) load();
+});
+</script>
+</body>
+</html>
